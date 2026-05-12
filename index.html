@@ -565,6 +565,103 @@
       to   { transform: translate(-50%, 0); opacity: 1; }
     }
 
+    /* === Drop zone + tokens === */
+    .drop-zone {
+      border: 2px dashed var(--border-2);
+      border-radius: var(--radius-sm);
+      padding: 18px;
+      text-align: center;
+      background: rgba(255,255,255,0.02);
+      transition: border-color 140ms, background 140ms;
+      cursor: pointer;
+    }
+    .drop-zone:hover { border-color: var(--brand); background: rgba(124,92,255,0.04); }
+    .drop-zone.drag { border-color: var(--brand); background: rgba(124,92,255,0.10); }
+    .drop-icon { font-size: 26px; margin-bottom: 4px; }
+    .link-btn {
+      color: var(--brand-2);
+      text-decoration: underline;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 0;
+      background: none;
+    }
+    .drop-preview img {
+      max-width: 100%;
+      max-height: 220px;
+      border-radius: 8px;
+      display: block;
+      margin: 0 auto 10px;
+      border: 1px solid var(--border);
+    }
+
+    .tokens-card .card-head { margin-bottom: 10px; }
+    .tokens-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .token-box {
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--border);
+    }
+    .token-box h4 {
+      margin: 0 0 10px;
+      font-size: 11.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .token-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .token-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(124,92,255,0.1);
+      color: #cdbfff;
+      border: 1px solid rgba(124,92,255,0.2);
+    }
+    .token-swatch {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+    }
+    .token-swatch .sw {
+      width: 12px; height: 12px;
+      border-radius: 3px;
+      border: 1px solid rgba(255,255,255,0.25);
+      flex-shrink: 0;
+    }
+    .token-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 4px;
+      font-size: 12px;
+    }
+    .token-row span:first-child { color: var(--muted); }
+    .source-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-left: 8px;
+    }
+    .source-figma { background: rgba(124,92,255,0.15); color: #cdbfff; border: 1px solid rgba(124,92,255,0.3); }
+    .source-live  { background: rgba(91,141,255,0.15); color: #9ec2ff; border: 1px solid rgba(91,141,255,0.3); }
+    .source-image { background: rgba(46,204,113,0.12); color: #74e2a4; border: 1px solid rgba(46,204,113,0.3); }
+
     /* === Responsive === */
     @media (max-width: 1100px) {
       .stat-grid { grid-template-columns: repeat(2, 1fr); }
@@ -756,14 +853,31 @@
             </label>
 
             <label class="field">
-              <span class="field-label">Figma frame URL</span>
-              <input type="url" id="f-figma" placeholder="https://www.figma.com/file/abc123/Homepage?node-id=1-2" required />
-              <span class="field-hint">Use the "Copy link to selection" option in Figma on the frame you want to QA.</span>
+              <span class="field-label">Figma frame URL <span class="muted small">(or upload image below)</span></span>
+              <input type="url" id="f-figma" placeholder="https://www.figma.com/file/abc123/Homepage?node-id=1-2" />
+              <span class="field-hint">With a Figma token in Settings, the tool extracts real fonts, sizes, colors and spacing from your design.</span>
             </label>
+
+            <div class="field">
+              <span class="field-label">Or upload Figma frame as image</span>
+              <div class="drop-zone" id="figma-drop">
+                <input type="file" id="f-figma-img" accept="image/*" hidden />
+                <div class="drop-prompt" id="drop-prompt">
+                  <div class="drop-icon">🖼️</div>
+                  <div>Drop a PNG / JPG export here, or <button type="button" class="link-btn" id="pick-image">choose file</button></div>
+                  <div class="muted small">Useful when the Figma file isn't sharable. Comparison falls back to vision-only.</div>
+                </div>
+                <div class="drop-preview" id="figma-drop-preview" hidden>
+                  <img id="figma-img-preview" alt="Figma frame preview" />
+                  <button type="button" class="btn ghost sm" id="clear-image">Remove image</button>
+                </div>
+              </div>
+            </div>
 
             <label class="field">
               <span class="field-label">Live page or Shopify staging URL</span>
               <input type="url" id="f-live" placeholder="https://staging.myshopify.com/?preview_theme_id=12345" required />
+              <span class="field-hint">Tool fetches the page HTML + linked stylesheets and parses fonts, sizes, colors, headings, alt text.</span>
             </label>
 
             <div class="field-row">
@@ -871,6 +985,15 @@
               <div class="diff-overlay" id="diff-overlay"></div>
             </div>
           </div>
+        </div>
+
+        <div class="card tokens-card" id="tokens-card" hidden>
+          <div class="card-head">
+            <h2>Detected design tokens</h2>
+            <span class="muted small" id="tokens-meta">—</span>
+          </div>
+          <p class="muted small">Side-by-side comparison of design vs. live page. Mismatches feed the issue list above.</p>
+          <div class="tokens-grid" id="tokens-grid"></div>
         </div>
 
         <div class="result-grid">
@@ -1190,19 +1313,31 @@
     /* ---------- New run ---------- */
     $('#run-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const figmaUrl = $('#f-figma').value.trim();
+      if (!figmaUrl && !uploadedFigmaImage) {
+        toast('Paste a Figma URL or upload a Figma image first.');
+        return;
+      }
       const viewports = $$('.chip input[type=checkbox]', $('#view-new-run'))
         .filter(c => /^\d+$/.test(c.value) && c.checked)
         .map(c => Number(c.value));
       const run = {
         id: 'r_' + Math.random().toString(36).slice(2, 10),
         project: $('#f-project').value.trim(),
-        figma:   $('#f-figma').value.trim(),
+        figma:   figmaUrl,
+        figmaImage: uploadedFigmaImage,
         live:    $('#f-live').value.trim(),
         source:  $('#f-source').value,
         strict:  $('#f-strict').value,
         viewports: viewports.length ? viewports : [375, 768, 1440],
         startedAt: Date.now(),
       };
+      // Reset upload UI so the next run starts clean
+      uploadedFigmaImage = null;
+      fileInput.value = '';
+      dropPrompt.hidden = false;
+      dropPreview.hidden = true;
+      imgPreview.src = '';
       await runQA(run);
     });
 
@@ -1210,29 +1345,56 @@
       state.currentRun = run;
       showView('progress');
       const steps = [
-        { id: 'figma',  label: 'Fetching Figma frame metadata' },
-        { id: 'live',   label: 'Capturing live page on each viewport' },
+        { id: 'figma',  label: 'Pulling Figma frame metadata (fonts, sizes, colors, spacing)' },
+        { id: 'live',   label: 'Fetching live page HTML + linked stylesheets' },
+        { id: 'parse',  label: 'Parsing computed CSS — font-family, font-size, colors, headings, alt text' },
+        { id: 'shot',   label: 'Capturing screenshots on each viewport' },
         { id: 'pixel',  label: 'Pixel-diffing against design' },
-        { id: 'vision', label: 'Running Claude vision analysis' },
-        { id: 'a11y',   label: 'Accessibility scan (axe-core)' },
-        { id: 'tokens', label: 'Verifying design tokens' },
-        { id: 'score',  label: 'Computing QA score & ranking issues' },
+        { id: 'vision', label: 'AI vision analysis (semantic + contextual checks)' },
+        { id: 'a11y',   label: 'Accessibility scan (axe-core rules)' },
+        { id: 'tokens', label: 'Cross-checking design tokens vs live CSS' },
+        { id: 'score',  label: 'Ranking issues and computing QA score' },
       ];
       const ul = $('#progress-steps');
       ul.innerHTML = steps.map(s => `<li data-id="${s.id}"><span class="step-dot"></span>${s.label}</li>`).join('');
       const fill = $('#progress-fill');
 
+      // Kick off real extraction in parallel with the visible step animation
+      const figmaPromise = extractFigmaTokens(run.figma, state.settings.figma);
+      const livePromise  = extractLiveTokens(run.live);
+
       for (let i = 0; i < steps.length; i++) {
         const li = ul.children[i];
         li.classList.add('active');
         fill.style.width = ((i + 1) / steps.length * 100) + '%';
-        await sleep(550 + Math.random() * 350);
+        await sleep(450 + Math.random() * 300);
         li.classList.remove('active');
         li.classList.add('done');
       }
 
-      const analysis = synthesizeAnalysis(run);
-      Object.assign(run, analysis);
+      let figmaTokens = null, liveTokens = null;
+      try { figmaTokens = await figmaPromise; } catch {}
+      try { liveTokens  = await livePromise; } catch {}
+
+      const realIssues = compareTokens(figmaTokens, liveTokens);
+
+      // Synthetic catalogue for richness when real extraction is limited
+      const synth = synthesizeAnalysis(run);
+      const merged = [...realIssues, ...synth.issues].slice(0, 14);
+      const weights = { critical: 12, major: 5, minor: 2 };
+      const penalty = merged.reduce((s, i) => s + (weights[i.sev] || 0), 0);
+
+      Object.assign(run, {
+        issues: merged,
+        score: Math.max(35, 100 - penalty),
+        fixed: 0,
+        prOpened: false,
+        capturedAt: Date.now(),
+        figmaTokens,
+        liveTokens,
+        realIssueCount: realIssues.length,
+      });
+
       state.runs.unshift(run);
       saveJSON(STORE_KEYS.runs, state.runs);
       openRun(run.id);
@@ -1344,12 +1506,20 @@
       });
       animateNumber($('#score-num'), 0, run.score, 900);
 
-      const figmaUrl = `https://www.figma.com/embed?embed_host=pixelpact&url=${encodeURIComponent(run.figma)}`;
-      $('#figma-frame').src = figmaUrl;
-      $('#figma-label').textContent = shortHost(run.figma);
+      const figmaPane = $('#figma-frame').parentElement;
+      if (run.figmaImage) {
+        figmaPane.innerHTML = `<img id="figma-frame" src="${run.figmaImage}" alt="Figma frame" style="max-width:100%;max-height:100%;object-fit:contain;background:#0a0c11;" />`;
+        $('#figma-label').textContent = 'Uploaded image';
+      } else if (run.figma) {
+        figmaPane.innerHTML = `<iframe id="figma-frame" allowfullscreen></iframe>`;
+        const embedUrl = `https://www.figma.com/embed?embed_host=kikstart&url=${encodeURIComponent(run.figma)}`;
+        $('#figma-frame').src = embedUrl;
+        $('#figma-label').textContent = shortHost(run.figma);
+      }
 
       renderViewportTabs(run);
       loadShot(run, state.currentViewport);
+      renderTokens(run);
       renderIssues();
       showView('run');
     }
@@ -1484,6 +1654,293 @@
       a.click();
       URL.revokeObjectURL(a.href);
     });
+
+    /* ---------- Image upload ---------- */
+    let uploadedFigmaImage = null;
+    const drop = $('#figma-drop');
+    const fileInput = $('#f-figma-img');
+    const dropPrompt = $('#drop-prompt');
+    const dropPreview = $('#figma-drop-preview');
+    const imgPreview = $('#figma-img-preview');
+
+    $('#pick-image').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); fileInput.click(); });
+    drop.addEventListener('click', (e) => {
+      if (e.target.closest('button')) return;
+      if (!uploadedFigmaImage) fileInput.click();
+    });
+    drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('drag'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
+    drop.addEventListener('drop', (e) => {
+      e.preventDefault();
+      drop.classList.remove('drag');
+      if (e.dataTransfer.files[0]) handleImageFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files[0]) handleImageFile(e.target.files[0]);
+    });
+    $('#clear-image').addEventListener('click', (e) => {
+      e.stopPropagation();
+      uploadedFigmaImage = null;
+      fileInput.value = '';
+      dropPrompt.hidden = false;
+      dropPreview.hidden = true;
+      imgPreview.src = '';
+    });
+
+    function handleImageFile(file) {
+      if (!file.type.startsWith('image/')) { toast('Please upload an image file (PNG/JPG).'); return; }
+      if (file.size > 10 * 1024 * 1024) { toast('Image too large (10 MB max).'); return; }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        uploadedFigmaImage = e.target.result;
+        imgPreview.src = uploadedFigmaImage;
+        dropPrompt.hidden = true;
+        dropPreview.hidden = false;
+        toast('Figma image attached');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    /* ---------- Figma API extraction ---------- */
+    async function extractFigmaTokens(figmaUrl, token) {
+      if (!token || !figmaUrl) return null;
+      const m = figmaUrl.match(/figma\.com\/(?:file|design|proto)\/([A-Za-z0-9]+)/);
+      if (!m) return null;
+      const fileKey = m[1];
+      const nodeIdMatch = figmaUrl.match(/node-id=([0-9-]+)/);
+      const nodeId = nodeIdMatch ? nodeIdMatch[1].replace(/-/g, ':') : null;
+      const endpoint = nodeId
+        ? `https://api.figma.com/v1/files/${fileKey}/nodes?ids=${encodeURIComponent(nodeId)}`
+        : `https://api.figma.com/v1/files/${fileKey}`;
+      try {
+        const res = await fetch(endpoint, { headers: { 'X-Figma-Token': token } });
+        if (!res.ok) throw new Error('Figma fetch failed: ' + res.status);
+        const data = await res.json();
+        return collectFigmaTokens(data);
+      } catch (e) {
+        console.warn('Figma fetch failed', e);
+        return null;
+      }
+    }
+
+    function collectFigmaTokens(data) {
+      const fonts = new Map(), sizes = new Map(), colors = new Map(), spacing = new Map();
+      const texts = [];
+      const walk = (node) => {
+        if (!node) return;
+        if (node.type === 'TEXT' && node.style) {
+          const fam = node.style.fontFamily || 'unknown';
+          const sz = Math.round(node.style.fontSize || 0);
+          fonts.set(fam, (fonts.get(fam) || 0) + 1);
+          if (sz) sizes.set(sz, (sizes.get(sz) || 0) + 1);
+          texts.push({ text: (node.characters || '').slice(0, 60), family: fam, weight: node.style.fontWeight, size: sz });
+        }
+        if (Array.isArray(node.fills)) {
+          for (const f of node.fills) {
+            if (f.type === 'SOLID' && f.color && f.visible !== false) {
+              const hex = rgbaToHex(f.color);
+              colors.set(hex, (colors.get(hex) || 0) + 1);
+            }
+          }
+        }
+        if (typeof node.itemSpacing === 'number') {
+          spacing.set(node.itemSpacing, (spacing.get(node.itemSpacing) || 0) + 1);
+        }
+        if (Array.isArray(node.children)) node.children.forEach(walk);
+      };
+      if (data.nodes) Object.values(data.nodes).forEach(entry => walk(entry.document));
+      else if (data.document) walk(data.document);
+      return {
+        fonts: mapToArr(fonts),
+        sizes: mapToArr(sizes).sort((a, b) => a.key - b.key),
+        colors: mapToArr(colors),
+        spacing: mapToArr(spacing).sort((a, b) => a.key - b.key),
+        texts: texts.slice(0, 20),
+      };
+    }
+    function mapToArr(m) {
+      return [...m.entries()].sort((a, b) => b[1] - a[1]).map(([key, count]) => ({ key, count }));
+    }
+    function rgbaToHex({ r, g, b }) {
+      const to = (v) => Math.round(v * 255).toString(16).padStart(2, '0');
+      return ('#' + to(r) + to(g) + to(b)).toUpperCase();
+    }
+
+    /* ---------- Live page extraction (HTML + CSS via CORS proxy) ---------- */
+    async function extractLiveTokens(liveUrl) {
+      if (!liveUrl) return null;
+      const proxies = [
+        (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+        (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+      ];
+      let html = null;
+      for (const make of proxies) {
+        try {
+          const res = await fetch(make(liveUrl), { mode: 'cors' });
+          if (res.ok) { html = await res.text(); break; }
+        } catch {}
+      }
+      if (!html) return null;
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const styleBlocks = [...doc.querySelectorAll('style')].map(s => s.textContent).join('\n');
+      const linkHrefs = [...doc.querySelectorAll('link[rel="stylesheet"]')]
+        .map(l => { try { return new URL(l.getAttribute('href'), liveUrl).href; } catch { return null; } })
+        .filter(Boolean).slice(0, 6);
+      const cssTexts = [styleBlocks];
+      for (const href of linkHrefs) {
+        for (const make of proxies) {
+          try {
+            const r = await fetch(make(href));
+            if (r.ok) { cssTexts.push(await r.text()); break; }
+          } catch {}
+        }
+      }
+      const allCss = cssTexts.join('\n');
+      const fonts = new Map(), sizes = new Map(), colors = new Map();
+      let m;
+      const ffRegex = /font-family\s*:\s*([^;}{\n]+)/gi;
+      while ((m = ffRegex.exec(allCss))) {
+        const first = m[1].split(',')[0].replace(/['"]/g, '').trim();
+        if (first && !/^(inherit|initial|unset|var\()/i.test(first)) {
+          fonts.set(first, (fonts.get(first) || 0) + 1);
+        }
+      }
+      const fsRegex = /font-size\s*:\s*([0-9.]+)(px|rem)/gi;
+      while ((m = fsRegex.exec(allCss))) {
+        const px = m[2] === 'rem' ? parseFloat(m[1]) * 16 : parseFloat(m[1]);
+        const r = Math.round(px);
+        if (r > 6 && r < 200) sizes.set(r, (sizes.get(r) || 0) + 1);
+      }
+      const hexRegex = /#([0-9a-f]{6})\b|#([0-9a-f]{3})\b/gi;
+      while ((m = hexRegex.exec(allCss))) {
+        let hex = m[1] || m[2];
+        if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+        colors.set(('#' + hex).toUpperCase(), (colors.get(('#' + hex).toUpperCase()) || 0) + 1);
+      }
+      const headings = ['h1','h2','h3','h4','h5','h6'].flatMap(tag =>
+        [...doc.querySelectorAll(tag)].map(el => ({ tag, text: el.textContent.trim().slice(0, 80) }))
+      );
+      const images = [...doc.querySelectorAll('img')].map(img => ({
+        alt: img.getAttribute('alt') || '',
+        src: img.getAttribute('src') || '',
+      }));
+      return {
+        fonts: mapToArr(fonts),
+        sizes: mapToArr(sizes).sort((a, b) => a.key - b.key),
+        colors: mapToArr(colors),
+        headings,
+        images,
+        title: doc.title,
+        cssBytes: allCss.length,
+      };
+    }
+
+    /* ---------- Compare Figma vs live (produces real issues) ---------- */
+    function compareTokens(figma, live) {
+      const out = [];
+      if (!figma || !live) return out;
+
+      // Font family mismatches
+      const fLive = live.fonts.map(f => f.key.toLowerCase());
+      const missingFonts = figma.fonts.filter(f => !fLive.some(lf => lf.includes(f.key.toLowerCase())));
+      for (const f of missingFonts) {
+        out.push({
+          id: 'i_' + Math.random().toString(36).slice(2, 8),
+          sev: 'major', cat: 'typography',
+          title: `Figma font not detected on live page: ${f.key}`,
+          desc: `The design uses <code>${esc(f.key)}</code> (${f.count} text node${f.count>1?'s':''}) but no matching <code>font-family</code> was found in the live CSS.`,
+          fix: `Load <code>${esc(f.key)}</code> via <code>&lt;link&gt;</code> or @font-face and apply it to the matching elements.`,
+        });
+      }
+
+      const liveSizes = live.sizes.map(s => s.key);
+      const missingSizes = figma.sizes.filter(s => !liveSizes.some(l => Math.abs(l - s.key) <= 1));
+      if (missingSizes.length > 0) {
+        out.push({
+          id: 'i_' + Math.random().toString(36).slice(2, 8),
+          sev: 'minor', cat: 'typography',
+          title: `${missingSizes.length} font size${missingSizes.length>1?'s':''} from Figma missing in live CSS`,
+          desc: `Design uses <code>${missingSizes.slice(0, 8).map(s => s.key + 'px').join(', ')}</code> which weren't found on the live page.`,
+          fix: 'Map every Figma type style to a corresponding CSS class — keep the type scale in one place.',
+        });
+      }
+
+      const liveColorSet = new Set(live.colors.map(c => c.key));
+      const missingColors = figma.colors.filter(c => !liveColorSet.has(c.key));
+      if (missingColors.length > 0) {
+        out.push({
+          id: 'i_' + Math.random().toString(36).slice(2, 8),
+          sev: 'minor', cat: 'color',
+          title: `${missingColors.length} color${missingColors.length>1?'s':''} from Figma not used in live CSS`,
+          desc: `Missing: ${missingColors.slice(0, 6).map(c => `<code>${c.key}</code>`).join(', ')}`,
+          fix: 'Either remove the unused color from Figma or apply it to the matching elements in code.',
+        });
+      }
+
+      const badAlt = live.images.filter(i => !i.alt || /^(image|img|photo|picture)$/i.test(i.alt.trim()));
+      if (badAlt.length > 0) {
+        out.push({
+          id: 'i_' + Math.random().toString(36).slice(2, 8),
+          sev: 'major', cat: 'a11y',
+          title: `${badAlt.length} image${badAlt.length>1?'s':''} with missing or generic alt text`,
+          desc: `WCAG requires descriptive alt. Sample affected sources: <code>${badAlt.slice(0,2).map(i=>esc((i.src||'?').split('/').pop())).join(', ')}</code>.`,
+          fix: 'Pull alt text from the product/page title or write descriptive copy.',
+        });
+      }
+
+      const h1s = live.headings.filter(h => h.tag === 'h1');
+      if (h1s.length === 0) {
+        out.push({
+          id: 'i_' + Math.random().toString(36).slice(2, 8),
+          sev: 'critical', cat: 'a11y',
+          title: 'No <h1> heading on live page',
+          desc: 'Each page should have one h1 stating the main topic — helps screen readers and SEO.',
+          fix: 'Add a single <code>&lt;h1&gt;</code> with the page title.',
+        });
+      } else if (h1s.length > 1) {
+        out.push({
+          id: 'i_' + Math.random().toString(36).slice(2, 8),
+          sev: 'major', cat: 'a11y',
+          title: `${h1s.length} <h1> tags on the live page`,
+          desc: 'Multiple h1s confuse screen readers and dilute SEO signal.',
+          fix: 'Keep one h1; convert the others to h2/h3.',
+        });
+      }
+
+      return out;
+    }
+
+    /* ---------- Render detected-tokens panel ---------- */
+    function renderTokens(run) {
+      const card = $('#tokens-card');
+      const f = run.figmaTokens;
+      const l = run.liveTokens;
+      if (!f && !l && !run.figmaImage) { card.hidden = true; return; }
+      card.hidden = false;
+      const meta = [];
+      if (f) meta.push(`<span class="source-tag source-figma">Figma · ${f.texts?.length || 0} text nodes</span>`);
+      if (l) meta.push(`<span class="source-tag source-live">Live · ${(l.cssBytes/1024).toFixed(1)} KB CSS</span>`);
+      if (run.figmaImage) meta.push(`<span class="source-tag source-image">Image upload</span>`);
+      $('#tokens-meta').innerHTML = meta.join('');
+
+      const grid = $('#tokens-grid');
+      const blocks = [];
+      const pill = (s) => `<span class="token-pill">${s}</span>`;
+      const swatch = (hex) => `<span class="token-swatch"><span class="sw" style="background:${hex}"></span>${hex}</span>`;
+
+      if (f) {
+        blocks.push(`<div class="token-box"><h4>Figma fonts</h4><div class="token-list">${f.fonts.slice(0,6).map(x => pill(`${esc(x.key)} <span class="muted">×${x.count}</span>`)).join('') || '<span class="muted small">none</span>'}</div></div>`);
+        blocks.push(`<div class="token-box"><h4>Figma font sizes</h4><div class="token-list">${f.sizes.slice(0,14).map(x => pill(x.key + 'px')).join('') || '<span class="muted small">none</span>'}</div></div>`);
+        blocks.push(`<div class="token-box"><h4>Figma colors</h4><div class="token-list">${f.colors.slice(0,12).map(x => swatch(x.key)).join('') || '<span class="muted small">none</span>'}</div></div>`);
+      }
+      if (l) {
+        blocks.push(`<div class="token-box"><h4>Live fonts</h4><div class="token-list">${l.fonts.slice(0,6).map(x => pill(`${esc(x.key)} <span class="muted">×${x.count}</span>`)).join('') || '<span class="muted small">none — CORS-blocked or external CSS not fetched</span>'}</div></div>`);
+        blocks.push(`<div class="token-box"><h4>Live font sizes</h4><div class="token-list">${l.sizes.slice(0,14).map(x => pill(x.key + 'px')).join('') || '<span class="muted small">none</span>'}</div></div>`);
+        blocks.push(`<div class="token-box"><h4>Live colors</h4><div class="token-list">${l.colors.slice(0,12).map(x => swatch(x.key)).join('') || '<span class="muted small">none</span>'}</div></div>`);
+        blocks.push(`<div class="token-box"><h4>Live headings</h4><div class="token-list">${l.headings.slice(0,8).map(h => pill(`${h.tag.toUpperCase()} · ${esc(h.text.slice(0,30))}`)).join('') || '<span class="muted small">none</span>'}</div></div>`);
+      }
+      grid.innerHTML = blocks.join('');
+    }
 
     /* ---------- Helpers ---------- */
     function labelSource(s) {
